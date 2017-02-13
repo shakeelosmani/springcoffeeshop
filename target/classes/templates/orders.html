@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Order Management</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-lg-offset-3">
+            <a href="/products"><img src="/logo.png" style="width:100%;"/></a>
+        </div>
+    </div>
+    <div class="page-header" id="banner">
+        <div class="row">
+            <div class="col-lg-8 col-md-7 col-sm-6">
+                <h1>Add an Order</h1>
+                <form>
+                    <div class="form-group">
+                        <label for="product_name">Select One Product</label>
+                            <div class="checkbox" name="product" th:each="product : ${products}">
+                                <label><span th:text="${product.productName}"></span><input style="margin-left: 0px;" type="checkbox" th:field="*{products}" th:value="${product.productName}" /></label>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_first_name">Customer First Name</label>
+                        <input type="text" class="form-control" id="customer_first_name"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_last_name">Customer Last Name</label>
+                        <input type="text" class="form-control" id="customer_last_name"/>
+                    </div>
+                    <button type="submit" class="btn btn-default" id="btn_submit">Add New Order</button>
+                </form>
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-lg-8 col-md-7 col-sm-6">
+                <a href="/products">Go to products page</a>
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-lg-8 col-md-7 col-sm-6">
+                <h1>List of orders</h1>
+
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Products</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    <tr th:each="order : ${orders}">
+                        <td th:text="${order.orderId}"></td>
+                        <td th:text="${order.customer.firstName + ' ' + order.customer.lastName}"></td>
+                        <td>
+                            <table>
+                                <tr th:each="product :${order.products}">
+                                    <td th:text="${product.productName}"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td th:text="${order.total}"></td>
+                        <td th:id="${order.orderId}"><button class="btn btn-danger delete-order">Complete Order</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div th:replace="fragments/footer :: footer">...</div>
+</div>
+<script src="/jquery.js" type="application/javascript"></script>
+<script type="application/javascript">
+    $(document).ready(function () {
+        $('#btn_submit').on("click",function(e){
+            e.preventDefault();
+            var firstName = $("#customer_first_name").val();
+            var lastName = $("#customer_last_name").val();
+            if (!$(".checkbox :checkbox").is(":checked")){
+                alert("You must at least select one product");
+            }
+            else if($.trim(firstName)===""){
+                alert("You must fill the first name");
+            }
+            else if($.trim(lastName)===""){
+                alert("You must fill the last name");
+            }
+            else{
+                var productIds = [];
+                $(".checkbox :checkbox:checked").each(function(){
+                   productIds.push(parseInt($(this).attr("id")));
+                });
+                $.ajax({
+                   type:"POST",
+                   url:"/createorder",
+                   data:{firstName:firstName,lastName:lastName, productIds:productIds},
+                   success:function (data) {
+                       if (confirm("Order with Id " +data + " Saved")){
+                           window.location.reload();
+                       }
+                   }
+                });
+            }
+        });
+
+        //Complete order button handler
+
+        $('.delete-order').on("click", function(e){
+            e.preventDefault();
+
+            if(confirm("Are you sure the order is complete?")){
+                var Id = parseInt($(this).closest("td").attr("id"));
+
+                $.ajax({
+                    type:"POST",
+                    url:"/removeorder",
+                    data:{Id:Id},
+                    success:function (data) {
+                        $(".delete-order").closest("td#"+data).parent("tr").fadeOut("slow",function(){
+                            $(".delete-order").closest("td#"+data).parent("tr").remove();
+                        });
+                    }
+                });
+            }
+
+        });
+
+    });
+</script>
+</body>
+</html>
