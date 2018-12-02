@@ -43,7 +43,7 @@
             </div>
         </div>
         <br />
-        <div class="row">
+        <div class="row" th:if="${!orders.isEmpty()}">
             <div class="col-lg-8 col-md-7 col-sm-6">
                 <h1>List of orders</h1>
 
@@ -77,6 +77,7 @@
             </div>
         </div>
     </div>
+    <br />
     <div th:replace="fragments/footer :: footer">...</div>
 </div>
 <script src="/jquery.js" type="application/javascript"></script>
